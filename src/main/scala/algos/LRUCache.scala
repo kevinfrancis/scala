@@ -34,24 +34,17 @@ trait Cache[K, V] {
  */
 case class LRUCache[K, V](val cache_capacity: Int) extends Cache[K, V] {
   
-  /** Hash table */
-  private val hashMap = HashMap[K, Pair[V, LinkedList[K]]]()
+  private val hashMap = HashMap[K, Pair[V, LinkedList[K]]]()  // The hash map
+  private var head_pred = LinkedList[K]() // Ref to head's predecessor node
+  private var tail_pred = head_pred       // Ref to tail's predecessor node
   
-    /** Reference to the predecessor node of the head item in the list */
-  private var head_pred = LinkedList[K]()
-  
-  /** Reference to the predecessor node of the last item in the list */
-  private var tail_pred = head_pred
-  
-  /** Number of items currently in cache */
-  private var cache_size: Int = 0
+  private var cache_used: Int = 0  // Number of items in cache
   
   /** 
    * Naive get implementation. Return value if its present
    * Not manipulating cache here. Leaving it for the API user to insert
    */
   override def get(key: K): Option[V] = hashMap.get(key) match {
-    /** */
     case Some(Pair(value, _)) => Some(value)
     case None => None
   }
@@ -60,6 +53,27 @@ case class LRUCache[K, V](val cache_capacity: Int) extends Cache[K, V] {
    * The core of the LRU algorithm.  Insert, update happens in O(1)
    */
   override def insert(key: K, value: V): Unit = hashMap.get(key) match {
+    
+    // Key already exists
+    case Some(Pair(_, key_pred)) =>
+      move_key_to_end(key)   // Move this key to the end of the list
+      hashMap.update(key, Pair(value, tail_pred))  // Update new value
+    
+    // Key does not exist
+    case None => cache_used match {
+      case x if (x == 0)             => insert_new_key_cache_empty(key, value)
+      case x if (x < cache_capacity) => insert_new_key_cache_not_yet_full(key, value)
+      case _                         => insert_new_key_cache_full(key, value)
+    }
+    
+  }
+  
+  /**
+   * move_key_to_end
+   * @param  key    The key
+   * @return        The node with the key is moved to the end of the linked list
+   */
+  private def move_key_to_end(key: K): Unit = hashMap.get(key) match {
     case Some(Pair(_, key_pred)) => { // Key already exists
       if (tail_pred != key_pred) {
 
@@ -75,49 +89,61 @@ case class LRUCache[K, V](val cache_capacity: Int) extends Cache[K, V] {
         tail_pred.next = key_ref
         tail_pred.next.next = LinkedList[K]()
       }
-      hashMap.update(key, Pair(value, tail_pred))  // Update new value
     }
-    case None => {
-      if (cache_size == 0) {
-
-        // Update linked list
-        tail_pred.next = LinkedList[K](key)
-        
-        // Update hash
-        hashMap.put(key, Pair(value, tail_pred))
-        
-        cache_size += 1
-      }
-      else if (cache_size < cache_capacity) {
-        
-        // Update linked list
-        tail_pred.next.next = LinkedList[K](key)
-        tail_pred = tail_pred.next
-        
-        // Update hash
-        hashMap.put(key, Pair(value, tail_pred))
-        
-        cache_size += 1
-      }
-      else {
-        /* We reached capacity. Must drop least recently used */
-        // Update linked list
-        val remove_key = head_pred.next.head
-        
-        val new_next = head_pred.next.next
-        head_pred.next = new_next
-        
-        tail_pred.next.next = LinkedList[K](key)
-        tail_pred = tail_pred.next
-        
-        // Update hash
-        hashMap.remove(remove_key)
-        hashMap.put(key, Pair(value, tail_pred))
-      }
-    }
-    
+    case None => throw new Exception("key doesn't exist") /* Key doesn't exist. Do nothing. */
   }
   
+  /**
+   * first_ever_insert
+   * @param key    The key to be inserted in the cache
+   * @param value  The value corresponding to the key
+   * @return       Updates the linked list and hash table
+   */
+  private def insert_new_key_cache_empty(key: K, value: V): Unit = {
+    tail_pred.next = LinkedList[K](key)          // Update linked list
+    hashMap.put(key, Pair(value, tail_pred))     // Update hash map
+    cache_used += 1                              // Increment cache_used
+  }
+  
+  /**
+   * insert_new_key_cache_not_yet_full
+   * @param key   The key to be inserted in the cache
+   * @param value The value corresponding to the key
+   * @return      Update the linked list and hash table
+   */
+  private def insert_new_key_cache_not_yet_full(key: K, value: V): Unit = {
+    // Linked list update
+    tail_pred.next.next = LinkedList[K](key)
+    tail_pred = tail_pred.next
+        
+    // hash update
+    hashMap.put(key, Pair(value, tail_pred))
+        
+    cache_used += 1
+  }
+  
+  /**
+   * insert_new_key_cache_full
+   * @param key   The key to be inserted in the cache
+   * @param value The value corresponding to the key
+   * @return      Update the linked list and hash table
+   *              Since we already reached 
+   */
+  private def insert_new_key_cache_full(key: K, value: V): Unit = {
+    // Update linked list
+    val remove_key = head_pred.next.head
+    
+    val new_next = head_pred.next.next
+    head_pred.next = new_next
+        
+    tail_pred.next.next = LinkedList[K](key)
+    tail_pred = tail_pred.next
+        
+    // Update hash
+    hashMap.remove(remove_key)
+    hashMap.put(key, Pair(value, tail_pred))
+  }
+
   override def toString(): String = head_pred.next.toString
 }
 
