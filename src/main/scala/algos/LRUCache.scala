@@ -60,23 +60,22 @@ case class LRUCache[K, V](val cache_capacity: Int) extends Cache[K, V] {
    * The core of the LRU algorithm.  Insert, update happens in O(1)
    */
   override def insert(key: K, value: V): Unit = hashMap.get(key) match {
-    case Some(Pair(value, key_pred)) => { // Key already exists
+    case Some(Pair(_, key_pred)) => { // Key already exists
       if (tail_pred != key_pred) {
 
         val key_ref = key_pred.next
         key_pred.next = key_pred.next.next
         
         hashMap.get(key_pred.next.head) match {
-          case Some(Pair(value, _)) => hashMap.update(key_pred.next.head, Pair(value, key_pred))
+          case Some(Pair(v, _)) => hashMap.update(key_pred.next.head, Pair(v, key_pred))
           case None => /* Do nothing */
         }
         
         tail_pred = tail_pred.next
         tail_pred.next = key_ref
         tail_pred.next.next = LinkedList[K]()
-        
-        hashMap.update(key, Pair(value, tail_pred))
       }
+      hashMap.update(key, Pair(value, tail_pred))  // Update new value
     }
     case None => {
       if (cache_size == 0) {
@@ -161,6 +160,12 @@ object LRUCacheTester {
     
     lru_cache.insert(9, "nine")
     println(lru_cache)
+    
+    lru_cache.insert(9, "Nine")
+    println(lru_cache.get(9))
+    
+    lru_cache.insert(7, "Seven")
+    println(lru_cache.get(7))
   }
   
 }
