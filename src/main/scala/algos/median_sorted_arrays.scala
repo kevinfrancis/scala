@@ -42,7 +42,7 @@ object MedianFinder {
   }
 }
 
-object Tester {
+object MedianSortedArraysTester {
   def main(args: Array[String]): Unit = {
     
     val test_map = Map(
