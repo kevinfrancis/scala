@@ -22,19 +22,25 @@ object MedianFinder {
       
       n match {  
         case 1 => (  a(a_left) + b(b_left)  ) / 2.0
+
+        /* Special base case for n=2; when both the middle elements are in one slice
+           e.g. a: {2, 3}  b: {1, 4}
+                   Here we cannot split the arrays further.
+                   Because both 2 & 3 belong to one side.  */
         case 2 => (  max(a(a_left), b(b_left)) +
                      min(a(a_right), b(b_right))    ) / 2.0
+
         case _ =>
           val a_mid = (a_left + a_right) / 2
           val b_mid = (b_left + b_right) / 2
-          val incr  = (n+1) % 2  // to accommodate even sized slices
+          val incr  = (n+1) % 2  // if n is even, the right side split should discard mid
           
           if (a(a_mid) < b(b_mid))
             median_slices(Pair(a_mid+incr, a_right), Pair(b_left, b_mid))
           else if (a(a_mid) > b(b_mid))
             median_slices(Pair(a_left, a_mid), Pair(b_mid+incr, b_right))
           else
-            a(a_mid)
+            (a(a_mid) + min(a(a_mid+incr), b(b_mid+incr))) / 2.0
       }
     }
   
@@ -45,6 +51,7 @@ object MedianFinder {
 object MedianSortedArraysTester {
   def main(args: Array[String]): Unit = {
     
+    /* Test cases */
     val test_map = Map(
 
         Pair(Array(0),
@@ -53,6 +60,9 @@ object MedianSortedArraysTester {
         Pair(Array(0, 1),
              Array(1, 2)) -> 1.0,
              
+        Pair(Array(2, 3),  // This is why we need a special base case for n = 2
+             Array(1, 4)) -> 2.5,
+
         Pair(Array(0, 2, 4),
              Array(1, 3, 5)) -> 2.5,
              
@@ -72,7 +82,16 @@ object MedianSortedArraysTester {
              Array(1, 1, 2, 14, 15)) -> 12.5,
              
         Pair(Array(1, 2, 12, 19, 21, 23),
-             Array(20, 22, 24, 26, 28, 30)) -> 21.5
+             Array(20, 22, 24, 26, 28, 30)) -> 21.5,
+
+        Pair(Array(1, 1, 2, 2),
+             Array(1, 1, 2, 2)) -> 1.5,
+             
+        Pair(Array(1, 1, 3, 5),
+             Array(1, 1, 2, 4)) -> 1.5,
+             
+        Pair(Array(1, 1, 1, 2, 4),
+             Array(1, 1, 1, 3, 5)) -> 1.0
     )
 
     
