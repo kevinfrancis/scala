@@ -33,12 +33,12 @@ object MedianFinder {
         case _ =>
           val a_mid = (a_left + a_right) / 2
           val b_mid = (b_left + b_right) / 2
-          val incr  = (n+1) % 2  // if n is even, the right side split should discard mid
+          val incr  = (n+1) % 2  // if n is even, include mid in the split
           
           if (a(a_mid) < b(b_mid))
-            median_slices(Pair(a_mid+incr, a_right), Pair(b_left, b_mid))
+            median_slices(Pair(a_mid, a_right), Pair(b_left, b_mid+incr))
           else if (a(a_mid) > b(b_mid))
-            median_slices(Pair(a_left, a_mid), Pair(b_mid+incr, b_right))
+            median_slices(Pair(a_left, a_mid+incr), Pair(b_mid, b_right))
           else
             (a(a_mid) + min(a(a_mid+incr), b(b_mid+incr))) / 2.0
       }
@@ -91,7 +91,10 @@ object MedianSortedArraysTester {
              Array(1, 1, 2, 4)) -> 1.5,
              
         Pair(Array(1, 1, 1, 2, 4),
-             Array(1, 1, 1, 3, 5)) -> 1.0
+             Array(1, 1, 1, 3, 5)) -> 1.0,
+          
+        Pair(Array(1, 2, 3, 3),
+             Array(1, 1, 4, 4)) -> 2.5
     )
 
     
