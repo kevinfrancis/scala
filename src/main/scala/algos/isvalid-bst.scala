@@ -3,12 +3,6 @@ package algos
 /**
  * Generic Binary Search Tree validator 
  */
-
-case class BinaryTree[T](var root: T) {
-  var left: Option[BinaryTree[T]] = None
-  var right: Option[BinaryTree[T]] = None
-}
-
 object BSTValidator {
 
   /**
