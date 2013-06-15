@@ -8,7 +8,7 @@ object BinaryTreeReconstructor {
   /**
    * Given inorder and preorder traversals, construct the binary tree
    */
-  def reconstruct[T <% Ordered[T]](inorder: Array[T], preorder: Array[T]): Option[BinaryTree[T]] = {
+  def reconstruct[T](inorder: Array[T], preorder: Array[T]): Option[BinaryTree[T]] = {
     
     def search(k: T, start: Int, end: Int): Int = {
       for (i <- Range(start, end+1))
