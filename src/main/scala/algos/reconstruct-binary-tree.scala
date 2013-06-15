@@ -10,8 +10,8 @@ object BinaryTreeReconstructor {
    */
   def reconstruct[T](inorder: Array[T], preorder: Array[T]): Option[BinaryTree[T]] = {
     
-    def search(k: T, start: Int, end: Int): Int = {
-      for (i <- Range(start, end+1))
+    def search(k: T, start: Int, len: Int): Int = {
+      for (i <- Range(start, start + len))
         if (k == inorder(i))
           return i
           
@@ -19,35 +19,26 @@ object BinaryTreeReconstructor {
     }
     
     /** inner function that works on sections of array rather than the whole array */
-    def construct(inorder_slice: Pair[Int, Int], preorder_slice: Pair[Int, Int]): Option[BinaryTree[T]] = {
-      
-      val Pair(inorder_start, inorder_end) = inorder_slice
-      val Pair(preorder_start, preorder_end) = preorder_slice
-      val len = 1 + inorder_end - inorder_start
-      
-      len match {
-        case 0 => None
-        case _ =>
-          val root_val = preorder(preorder_start)
-          val inorder_pos_of_root = search(root_val, inorder_start, inorder_end)
-          val node = BinaryTree(root_val)
+    def construct( inorder_start: Int, preorder_start: Int,
+                   len: Int ): Option[BinaryTree[T]] = len match {
+      case 0 => None
+      case _ =>
+        val root_val = preorder(preorder_start)
+        val inorder_pos_of_root = search(root_val, inorder_start, len)
+        val node = BinaryTree(root_val)
           
-          val left_slice_len = inorder_pos_of_root - inorder_start
-          node.left = construct(Pair(inorder_start, inorder_start + left_slice_len - 1),
-                                Pair(preorder_start + 1,
-                                     (preorder_start + 1) + (left_slice_len - 1)))
+        val left_slice_len = inorder_pos_of_root - inorder_start
+        node.left = construct(inorder_start, preorder_start+1, left_slice_len)
           
-          val right_slice_len = inorder_end - inorder_pos_of_root 
-          node.right = construct(Pair(inorder_pos_of_root + 1,
-                                      inorder_end),
-                                 Pair((preorder_start + 1) + left_slice_len,
-                                       preorder_end)) 
-          // return
-          Some(node)
-      }
+        val right_slice_len = len - left_slice_len - 1
+        node.right = construct(inorder_pos_of_root + 1,
+                               preorder_start + 1 + left_slice_len,
+                               right_slice_len)
+        // return
+        Some(node)
     }
     
-    construct(Pair(0, inorder.length-1), Pair(0, preorder.length-1))
+    construct(0, 0, inorder.length)
   }
 }
 

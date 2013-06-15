@@ -14,37 +14,29 @@ object MedianFinder {
 
     /* Finds median from two sorted slices */
     @scala.annotation.tailrec
-    def median_slices(slice_a: Pair[Int, Int], slice_b: Pair[Int, Int]): Double = {
+    def median_slices(a_start: Int, b_start: Int, n: Int): Double = n match {
       
-      val Pair(a_left, a_right) = slice_a
-      val Pair(b_left, b_right) = slice_b
-      val n = (1 + a_right - a_left)
+      case 1 => ( a(a_start) + b(b_start) ) / 2.0
       
-      n match {  
-        case 1 => (  a(a_left) + b(b_left)  ) / 2.0
-
-        /* Special base case for n=2; when both the middle elements are in one slice
-           e.g. a: {2, 3}  b: {1, 4}
-                   Here we cannot split the arrays further.
-                   Because both 2 & 3 belong to one side.  */
-        case 2 => (  max(a(a_left), b(b_left)) +
-                     min(a(a_right), b(b_right))    ) / 2.0
-
-        case _ =>
-          val a_mid = (a_left + a_right) / 2
-          val b_mid = (b_left + b_right) / 2
-          val incr  = (n+1) % 2  // if n is even, include mid in the split
-          
-          if (a(a_mid) < b(b_mid))
-            median_slices(Pair(a_mid, a_right), Pair(b_left, b_mid+incr))
-          else if (a(a_mid) > b(b_mid))
-            median_slices(Pair(a_left, a_mid+incr), Pair(b_mid, b_right))
-          else
-            (a(a_mid) + min(a(a_mid+incr), b(b_mid+incr))) / 2.0
-      }
+      // Base case for n=2; when both the median numbers are in one array
+      // e.g. a=[2, 3];  b = [1, 4] =>  We can't split array "a" further.
+      case 2 => ( max(a( a_start ), b( b_start )) + 
+                  min(a(a_start+1), b(b_start+1))  ) / 2.0
+      case _ =>
+        val a_mid = a_start + (n-1)/2
+        val b_mid = b_start + (n-1)/2
+        
+        if (a(a_mid) < b(b_mid))          
+          median_slices(a_mid, b_start, 1+n/2) // search a's left and b's right
+        else if (a(a_mid) > b(b_mid))
+          median_slices(a_start, b_mid, 1+n/2) // search a's right and b's left
+        else {
+          val incr = (n + 1) % 2
+          (a(a_mid) + min(a(a_mid+incr), b(b_mid+incr))) / 2.0
+        }
     }
-  
-    median_slices(Pair(0, a.length-1), Pair(0, a.length-1))
+    
+    median_slices(0, 0, a.length)
   }
 }
 
@@ -53,6 +45,7 @@ object MedianSortedArraysTester {
     
     /* Test cases */
     val test_map = Map(
+
 
         Pair(Array(0),
              Array(1)) -> 0.5,
@@ -65,7 +58,7 @@ object MedianSortedArraysTester {
 
         Pair(Array(0, 2, 4),
              Array(1, 3, 5)) -> 2.5,
-             
+
         Pair(Array(1, 2, 3),
              Array(4, 5, 6)) -> 3.5,
         
@@ -100,10 +93,9 @@ object MedianSortedArraysTester {
     
 
     for ((Pair(a, b), ans) <- test_map)
-      assert(MedianFinder.median_of_sorted_arrays(a, b) == ans)
+      assert(MedianFinder.median_of_sorted_arrays(a , b) == ans)
       
     println("All tests passed")
-
                                                  
   }
 }
