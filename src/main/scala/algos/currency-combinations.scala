@@ -21,7 +21,7 @@ object CurrencyCombinations {
     
     if (cents > 0)
       // combK(25) ::: combK(10) ::: combK(5) ::: combK(1)
-      denominations.map(combK).foldLeft(List[List[Int]]())(_ ::: _)
+      denominations.flatMap(combK)
     else
       List(List())
   }
